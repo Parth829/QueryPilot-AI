@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X, Database, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 export default function DataSourceWizard({ onClose, onComplete }) {
   const [step, setStep] = useState(1);
@@ -26,7 +27,7 @@ export default function DataSourceWizard({ onClose, onComplete }) {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post('http://localhost:8000/api/sources', {
+      const res = await axios.post(`${API_BASE_URL}/api/sources`, {
         name: formData.name || 'New Database',
         source_type: sourceType,
         connection_string: formData.host

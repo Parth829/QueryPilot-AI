@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Database, Plus, CheckCircle } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 export default function DataSources() {
   const [sources, setSources] = useState([]);
@@ -16,7 +17,7 @@ export default function DataSources() {
 
   const fetchSources = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/api/sources');
+      const res = await axios.get(`${API_BASE_URL}/api/sources`);
       setSources(res.data);
     } catch (err) {
       console.error(err);
@@ -28,7 +29,7 @@ export default function DataSources() {
     setLoading(true);
     setStatus(null);
     try {
-      await axios.post('http://localhost:8000/api/sources', {
+      await axios.post(`${API_BASE_URL}/api/sources`, {
         name,
         source_type: sourceType,
         connection_string: connStr

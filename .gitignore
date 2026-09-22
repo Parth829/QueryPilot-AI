@@ -1,18 +1,33 @@
-# Environment variables (API Keys)
+# Environment variables & API Keys
 .env
+.env.local
+.env.*.local
 
-# Python Virtual Environment
+# Python Virtual Environments
 venv/
+.venv/
+env/
 
 # Databases and Vector Stores
 *.db
+*.sqlite
+*.sqlite3
 chroma_db/
 copilot_metadata.db
+
+# Node dependencies & build artifacts
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# Python bytecode
+# Python bytecode & cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/

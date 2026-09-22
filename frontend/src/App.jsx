@@ -5,6 +5,7 @@ import ChatWorkspace from './components/ChatWorkspace';
 import ArtifactPanel from './components/ArtifactPanel';
 import DataSourceWizard from './components/DataSourceWizard';
 import SettingsModal from './components/SettingsModal';
+import { API_BASE_URL } from './config';
 
 const DataPreviewModal = ({ sourceName, onClose }) => {
   const [data, setData] = useState([]);
@@ -18,7 +19,7 @@ const DataPreviewModal = ({ sourceName, onClose }) => {
       setLoading(true);
       setError(null);
       try {
-        let url = `http://localhost:8000/api/preview?source_name=${encodeURIComponent(sourceName)}`;
+        let url = `${API_BASE_URL}/api/preview?source_name=${encodeURIComponent(sourceName)}`;
         if (activeTable) {
             url += `&table_name=${encodeURIComponent(activeTable)}`;
         }
@@ -119,7 +120,7 @@ export default function App() {
 
   const fetchSources = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/api/sources');
+      const res = await axios.get(`${API_BASE_URL}/api/sources`);
       setDataSources(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       console.error('Failed to fetch data sources', e);
@@ -142,7 +143,7 @@ export default function App() {
 
   const handleDisconnectSource = async (sourceName) => {
     try {
-      await axios.delete(`http://localhost:8000/api/sources/${encodeURIComponent(sourceName)}`);
+      await axios.delete(`${API_BASE_URL}/api/sources/${encodeURIComponent(sourceName)}`);
       fetchSources();
     } catch (e) {
       console.error('Failed to disconnect source', e);

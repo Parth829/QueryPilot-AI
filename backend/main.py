@@ -9,10 +9,18 @@ import asyncio
 
 app = FastAPI(title="Enterprise Agentic AI Analytics Copilot API")
 
+allowed_origins_env = os.environ.get("ALLOWED_ORIGINS")
+if allowed_origins_env:
+    origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+    allow_credentials = True
+else:
+    origins = ["*"]
+    allow_credentials = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -45,7 +53,9 @@ def _build_response(result_state: dict) -> dict:
     return response.model_dump()
 
 
-
+# ============================================================
+# Original blocking endpoint (kept for backward compatibility)
+# ============================================================
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     try:
@@ -58,28 +68,30 @@ async def chat_endpoint(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
+# ============================================================
+# SSE Streaming endpoint — streams agent progress in real-time
+# ============================================================
 @app.post("/api/chat/stream")
 async def chat_stream_endpoint(request: ChatRequest):
     async def event_generator():
         try:
             initial_state = AgentState(query=request.query)
             
-            
+            # Stream node-by-node using LangGraph's stream method
             last_timeline_len = 0
             final_state = None
             
             for event in app_graph.stream(initial_state):
-                
+                # event is a dict like {"node_name": state_dict}
                 for node_name, state_data in event.items():
                     final_state = state_data
                     
-                    
+                    # Extract new timeline entries since last event
                     timeline = state_data.get("timeline", [])
                     new_entries = timeline[last_timeline_len:]
                     last_timeline_len = len(timeline)
                     
-                    
+                    # Send progress event for each new timeline entry
                     for entry in new_entries:
                         progress = {
                             "type": "progress",
@@ -88,7 +100,7 @@ async def chat_stream_endpoint(request: ChatRequest):
                         }
                         yield f"data: {json.dumps(progress)}\n\n"
                     
-                    
+                    # If we have SQL, send it as an intermediate result
                     if node_name in ("sql_guard", "execute") and state_data.get("sql_query"):
                         sql_event = {
                             "type": "sql",
@@ -97,7 +109,7 @@ async def chat_stream_endpoint(request: ChatRequest):
                         }
                         yield f"data: {json.dumps(sql_event)}\n\n"
             
-            
+            # Send the final complete response
             if final_state:
                 response_data = _build_response(final_state)
                 final_event = {
@@ -128,7 +140,9 @@ async def chat_stream_endpoint(request: ChatRequest):
     )
 
 
-
+# ============================================================
+# On-demand endpoints for heavy ML workloads
+# ============================================================
 
 class OnDemandRequest(BaseModel):
     sql_query: str
@@ -163,7 +177,9 @@ async def explain_endpoint(request: OnDemandRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
+# ============================================================
+# Existing endpoints (PDF export, data sources)
+# ============================================================
 
 
 
@@ -225,3 +241,10 @@ def api_preview(source_name: str = None, table_name: str = None):
         return {"error": "Connection lost (backend restarted). Please reconnect your data source."}
     except Exception as e:
         return {"error": str(e)}
+
+
+# Serve frontend static assets if built (enables single-service unified deployments)
+frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+if os.path.exists(frontend_dist):
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, FileDown, CheckCircle, AlertTriangle, TrendingUp, Brain, Loader2, HelpCircle, ChevronDown, ChevronRight, BarChart3, Box, Users, Globe, DollarSign, Database, ShieldCheck, Cpu } from 'lucide-react';
 import DashboardRenderer from './DashboardRenderer';
+import { API_BASE_URL } from '../config';
 
 export default function ChatWorkspace({ setActiveArtifact, initialQuery, hasDataSources, onConnectSource }) {
   const [messages, setMessages] = useState([]);
@@ -61,7 +62,7 @@ export default function ChatWorkspace({ setActiveArtifact, initialQuery, hasData
     setStreamingSql(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/chat/stream', {
+      const response = await fetch(`${API_BASE_URL}/api/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: queryText }),
@@ -104,7 +105,7 @@ export default function ChatWorkspace({ setActiveArtifact, initialQuery, hasData
       }
     } catch (err) {
       try {
-        const res = await axios.post('http://localhost:8000/api/chat', { query: queryText });
+        const res = await axios.post(`${API_BASE_URL}/api/chat`, { query: queryText });
         setMessages(prev => [...prev, { role: 'assistant', data: res.data }]);
         // No auto-open for artifact panel here.
       } catch (fallbackErr) {
@@ -133,7 +134,7 @@ export default function ChatWorkspace({ setActiveArtifact, initialQuery, hasData
     ));
 
     try {
-      const res = await axios.post('http://localhost:8000/api/forecast', {
+      const res = await axios.post(`${API_BASE_URL}/api/forecast`, {
         sql_query: msg.data.generated_sql,
         query: messages[msgIdx - 1]?.content || '',
       });
@@ -167,7 +168,7 @@ export default function ChatWorkspace({ setActiveArtifact, initialQuery, hasData
     ));
 
     try {
-      const res = await axios.post('http://localhost:8000/api/explain', {
+      const res = await axios.post(`${API_BASE_URL}/api/explain`, {
         sql_query: msg.data.generated_sql,
         query: messages[msgIdx - 1]?.content || '',
       });
