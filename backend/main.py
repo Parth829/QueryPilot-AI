@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from .models import ChatRequest, ChatResponse, ForecastResult, Insight
 from .agent_graph import app_graph, AgentState, run_forecast, run_shap_analysis
+import os
 import json
 import asyncio
 
